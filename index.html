@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hidden Objects Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f0f0f0;
+    }
+    #game-container {
+      position: relative;
+      display: inline-block;
+      margin-top: 20px;
+    }
+    #game-image {
+      max-width: 100%;
+      height: auto;
+    }
+    #score {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    .hidden-object {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background-color: rgba(255, 0, 0, 0.3);
+      border-radius: 50%;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Hidden Objects Game</h1>
+  <div id="score">Found: 0 / 3</div>
+  <div id="game-container">
+    <img id="game-image" src="level1.jpg" alt="Hidden Objects Image">
+  </div>
+
+  <script>
+    const levels = [
+      {
+        image: "level1.jpg",
+        objectCount: 3 // Number of hidden objects for this level
+      },
+      {
+        image: "level2.jpg",
+        objectCount: 4 // Number of hidden objects for this level
+      }
+    ];
+
+    let currentLevel = 0;
+    let foundObjects = 0;
+    let totalObjects = levels[currentLevel].objectCount;
+    const rewardSound = new Audio('sounds/reward.mp3');
+
+    function getRandomPosition(imageWidth, imageHeight, objectSize) {
+      const maxX = imageWidth - objectSize;
+      const maxY = imageHeight - objectSize;
+      const x = Math.floor(Math.random() * maxX);
+      const y = Math.floor(Math.random() * maxY);
+      return { x, y };
+    }
+
+    function updateScore() {
+      document.getElementById('score').textContent = `Found: ${foundObjects} / ${totalObjects}`;
+    }
+
+    function loadLevel() {
+      const level = levels[currentLevel];
+      const gameContainer = document.getElementById('game-container');
+      const gameImage = document.getElementById('game-image');
+
+      // Set the image for the current level
+      gameImage.src = level.image;
+
+      // Clear previous hidden objects
+      gameContainer.querySelectorAll('.hidden-object').forEach(obj => obj.remove());
+
+      // Wait for the image to load before calculating positions
+      gameImage.onload = () => {
+        const imageWidth = gameImage.clientWidth;
+        const imageHeight = gameImage.clientHeight;
+        const objectSize = 30; // Size of the hidden object
+
+        // Add hidden objects for the current level
+        for (let i = 0; i < level.objectCount; i++) {
+          const { x, y } = getRandomPosition(imageWidth, imageHeight, objectSize);
+          const hiddenObject = document.createElement('div');
+          hiddenObject.classList.add('hidden-object');
+          hiddenObject.style.left = `${x}px`;
+          hiddenObject.style.top = `${y}px`;
+          hiddenObject.addEventListener('click', () => {
+            hiddenObject.style.backgroundColor = 'rgba(0, 255, 0, 0.5)';
+            foundObjects++;
+            rewardSound.play();
+            updateScore();
+            if (foundObjects === totalObjects) {
+              if (currentLevel < levels.length - 1) {
+                currentLevel++;
+                foundObjects = 0;
+                totalObjects = levels[currentLevel].objectCount;
+                loadLevel();
+              } else {
+                alert('Congratulations! You completed all levels!');
+              }
+            }
+          });
+          gameContainer.appendChild(hiddenObject);
+        }
+
+        // Reset score
+        updateScore();
+      };
+    }
+
+    // Start the game
+    loadLevel();
+  </script>
+</body>
+</html>
